@@ -45,7 +45,12 @@ function createTurndownService(settings: ExtensionSettings): TurndownService {
         rows.forEach((row, rowIndex) => {
           const cells = Array.from(row.querySelectorAll('th, td'));
           const cellContents = cells.map(cell => {
-            const text = (cell.textContent || '').replace(/\|/g, '\\|').replace(/\n/g, ' ').trim();
+            // Escape backslashes first, then pipe characters, and normalize newlines
+            const text = (cell.textContent || '')
+              .replace(/\\/g, '\\\\')
+              .replace(/\|/g, '\\|')
+              .replace(/\n/g, ' ')
+              .trim();
             return text;
           });
           
@@ -128,8 +133,9 @@ function prepareContent(element: Element, settings: ExtensionSettings): Element 
     try {
       const elements = clone.querySelectorAll(selector);
       elements.forEach(el => el.remove());
-    } catch {
-      // Invalid selector, skip
+    } catch (error) {
+      // Log warning for invalid selectors to help users debug their custom exclusions
+      console.warn(`Content to Markdown: Invalid CSS selector "${selector}" - skipping. Error:`, error);
     }
   });
   

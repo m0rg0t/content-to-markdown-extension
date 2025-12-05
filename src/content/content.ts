@@ -26,6 +26,17 @@ function showNotification(message: string, type: 'success' | 'error' = 'success'
   }, 3000);
 }
 
+// Copy text to clipboard with error handling
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (error) {
+    console.error('Failed to copy to clipboard:', error);
+    return false;
+  }
+}
+
 // Handle messages from popup/background
 chrome.runtime.onMessage.addListener((
   message: Message,
@@ -70,19 +81,42 @@ chrome.runtime.onMessage.addListener((
         }
         
         case 'CONVERT_CONTEXT_SELECTION': {
-          // This is triggered from context menu
+          // This is triggered from context menu for selected text
           const selectedContent = getSelectedContent();
           if (selectedContent) {
             const markdown = await convertToMarkdown(selectedContent, true);
             const formatted = await formatMarkdownOutput(markdown, true);
             
-            // Copy to clipboard
-            await navigator.clipboard.writeText(formatted);
-            showNotification('Selection copied as Markdown!');
-            sendResponse({ success: true, markdown: formatted });
+            // Copy to clipboard with error handling
+            const success = await copyToClipboard(formatted);
+            if (success) {
+              showNotification('Selection copied as Markdown!');
+              sendResponse({ success: true, markdown: formatted });
+            } else {
+              showNotification('Failed to copy to clipboard', 'error');
+              sendResponse({ success: false, error: 'Clipboard access denied' });
+            }
           } else {
             showNotification('No text selected', 'error');
             sendResponse({ success: false, error: 'No text selected' });
+          }
+          break;
+        }
+        
+        case 'COPY_PAGE_AS_MARKDOWN': {
+          // This is triggered from context menu for entire page
+          const mainContent = getMainContent();
+          const markdown = await convertToMarkdown(mainContent, false);
+          const formatted = await formatMarkdownOutput(markdown, true);
+          
+          // Copy to clipboard with error handling
+          const success = await copyToClipboard(formatted);
+          if (success) {
+            showNotification('Page copied as Markdown!');
+            sendResponse({ success: true, markdown: formatted });
+          } else {
+            showNotification('Failed to copy to clipboard', 'error');
+            sendResponse({ success: false, error: 'Clipboard access denied' });
           }
           break;
         }
