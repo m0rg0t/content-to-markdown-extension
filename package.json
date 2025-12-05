@@ -1,0 +1,27 @@
+{
+  "name": "content-to-markdown-extension",
+  "version": "1.0.0",
+  "description": "Chrome and Edge extension that convert page or selected content on a page into markdown",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "test": "echo \"No tests configured\" && exit 0"
+  },
+  "keywords": ["chrome-extension", "markdown", "converter"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "turndown": "^7.2.2"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.32",
+    "@types/turndown": "^5.0.6",
+    "copy-webpack-plugin": "^13.0.1",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "webpack": "^5.103.0",
+    "webpack-cli": "^6.0.1"
+  }
+}
