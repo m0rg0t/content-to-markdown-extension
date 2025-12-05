@@ -1,34 +1,105 @@
-/* Minimal styles for content script notification */
+/* Content Script Notification Styles */
+/* Matches the extension's refined minimalism aesthetic */
+
 .ctm-notification {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #333;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-  z-index: 999999;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  animation: ctm-slide-in 0.3s ease-out;
+  bottom: 24px;
+  right: 24px;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 2147483647;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  animation: ctm-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  /* Light theme default */
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a1a;
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .ctm-notification {
+    background: rgba(30, 41, 59, 0.95);
+    color: #f1f5f9;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Success state */
 .ctm-notification.success {
-  background-color: #28a745;
+  background: rgba(236, 253, 245, 0.98);
+  color: #065f46;
+  border-color: rgba(167, 243, 208, 0.5);
 }
 
+.ctm-notification.success::before {
+  content: '✓';
+  display: inline-block;
+  margin-right: 8px;
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ctm-notification.success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+}
+
+/* Error state */
 .ctm-notification.error {
-  background-color: #dc3545;
+  background: rgba(254, 242, 242, 0.98);
+  color: #991b1b;
+  border-color: rgba(254, 202, 202, 0.5);
 }
 
+.ctm-notification.error::before {
+  content: '✕';
+  display: inline-block;
+  margin-right: 8px;
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ctm-notification.error {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+}
+
+/* Slide in animation */
 @keyframes ctm-slide-in {
   from {
-    transform: translateY(100px);
+    transform: translateY(16px) scale(0.96);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
+  }
+}
+
+/* Slide out animation (applied via JS before removal) */
+.ctm-notification.ctm-fade-out {
+  animation: ctm-slide-out 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes ctm-slide-out {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0;
   }
 }

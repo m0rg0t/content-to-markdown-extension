@@ -110,15 +110,25 @@ function getExclusionSelectors(settings: ExtensionSettings): string[] {
     selectors.push('script', 'style', 'noscript', 'link[rel="stylesheet"]');
   }
   
-  // Add custom exclusions
+  // Add custom exclusions with validation
   if (settings.customExclusions) {
     const customSelectors = settings.customExclusions
       .split('\n')
       .map(s => s.trim())
-      .filter(s => s.length > 0);
+      .filter(s => s.length > 0)
+      .filter(selector => {
+        // Validate CSS selector by attempting to use it
+        try {
+          document.querySelector(selector);
+          return true;
+        } catch {
+          console.warn(`Content to Markdown: Skipping invalid custom selector "${selector}"`);
+          return false;
+        }
+      });
     selectors.push(...customSelectors);
   }
-  
+
   return selectors;
 }
 

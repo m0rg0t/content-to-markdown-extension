@@ -4,6 +4,26 @@ export interface SiteRule {
   contentSelector: string;
 }
 
+// Built-in site rules for popular websites
+// User rules take priority over built-in rules
+export const builtInSiteRules: SiteRule[] = [
+  // VK Developer Portal
+  { domain: 'dev.vk.com', contentSelector: '[data-t="page-content"]' },
+  // Medium and its subdomains
+  { domain: '*.medium.com', contentSelector: 'article' },
+  { domain: 'medium.com', contentSelector: 'article' },
+  // GitHub
+  { domain: 'github.com', contentSelector: '.markdown-body' },
+  // Stack Overflow
+  { domain: 'stackoverflow.com', contentSelector: '.s-prose' },
+  // Wikipedia
+  { domain: '*.wikipedia.org', contentSelector: '#mw-content-text' },
+  // Dev.to
+  { domain: 'dev.to', contentSelector: '#article-body' },
+  // Habr
+  { domain: 'habr.com', contentSelector: '.tm-article-body' },
+];
+
 // Default settings interface
 export interface ExtensionSettings {
   // Elements to exclude
@@ -95,21 +115,21 @@ export function stringifySiteRules(rules: SiteRule[]): string {
   return JSON.stringify(rules);
 }
 
-// Get content selector for a specific domain
-export function getContentSelectorForDomain(rules: SiteRule[], domain: string): string | null {
+// Find matching rule in a rules array
+function findMatchingRule(rules: SiteRule[], domain: string): SiteRule | null {
   // Normalize domains by removing www prefix for comparison
   const normalizeD = (d: string) => d.replace(/^www\./, '');
   const normalizedDomain = normalizeD(domain);
-  
+
   // Try exact match first (with normalization)
   const exactMatch = rules.find(rule => {
     const normalizedRule = normalizeD(rule.domain);
     return normalizedRule === normalizedDomain || rule.domain === domain;
   });
   if (exactMatch) {
-    return exactMatch.contentSelector;
+    return exactMatch;
   }
-  
+
   // Try wildcard/partial matching (e.g., *.example.com)
   // Wildcard matches subdomains only, not the base domain itself
   const wildcardMatch = rules.find(rule => {
@@ -121,9 +141,27 @@ export function getContentSelectorForDomain(rules: SiteRule[], domain: string): 
     return false;
   });
   if (wildcardMatch) {
-    return wildcardMatch.contentSelector;
+    return wildcardMatch;
   }
-  
+
+  return null;
+}
+
+// Get content selector for a specific domain
+// User rules take priority over built-in rules
+export function getContentSelectorForDomain(rules: SiteRule[], domain: string): string | null {
+  // First check user-defined rules (they take priority)
+  const userMatch = findMatchingRule(rules, domain);
+  if (userMatch) {
+    return userMatch.contentSelector;
+  }
+
+  // Fall back to built-in rules
+  const builtInMatch = findMatchingRule(builtInSiteRules, domain);
+  if (builtInMatch) {
+    return builtInMatch.contentSelector;
+  }
+
   return null;
 }
 
