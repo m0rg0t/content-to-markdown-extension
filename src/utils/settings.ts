@@ -1,3 +1,9 @@
+// Site-specific rule interface
+export interface SiteRule {
+  domain: string;
+  contentSelector: string;
+}
+
 // Default settings interface
 export interface ExtensionSettings {
   // Elements to exclude
@@ -11,6 +17,9 @@ export interface ExtensionSettings {
   
   // Custom exclusions
   customExclusions: string;
+  
+  // Site-specific rules (stored as JSON string for chrome.storage compatibility)
+  siteRules: string;
   
   // Output options
   includeImages: boolean;
@@ -32,6 +41,7 @@ export const defaultSettings: ExtensionSettings = {
   excludeForms: true,
   excludeScripts: true,
   customExclusions: '',
+  siteRules: '[]',
   includeImages: true,
   includeLinks: true,
   preserveTables: true,
@@ -57,7 +67,64 @@ function isValidSettings(obj: Record<string, unknown>): obj is ExtensionSettings
     return false;
   }
   
+  if (typeof obj['siteRules'] !== 'string') {
+    return false;
+  }
+  
   return true;
+}
+
+// Parse site rules from JSON string
+export function parseSiteRules(rulesJson: string): SiteRule[] {
+  try {
+    const parsed = JSON.parse(rulesJson);
+    if (Array.isArray(parsed)) {
+      return parsed.filter(rule => 
+        typeof rule.domain === 'string' && 
+        typeof rule.contentSelector === 'string'
+      );
+    }
+  } catch {
+    // Invalid JSON, return empty array
+  }
+  return [];
+}
+
+// Stringify site rules to JSON
+export function stringifySiteRules(rules: SiteRule[]): string {
+  return JSON.stringify(rules);
+}
+
+// Get content selector for a specific domain
+export function getContentSelectorForDomain(rules: SiteRule[], domain: string): string | null {
+  // Normalize domains by removing www prefix for comparison
+  const normalizeD = (d: string) => d.replace(/^www\./, '');
+  const normalizedDomain = normalizeD(domain);
+  
+  // Try exact match first (with normalization)
+  const exactMatch = rules.find(rule => {
+    const normalizedRule = normalizeD(rule.domain);
+    return normalizedRule === normalizedDomain || rule.domain === domain;
+  });
+  if (exactMatch) {
+    return exactMatch.contentSelector;
+  }
+  
+  // Try wildcard/partial matching (e.g., *.example.com)
+  // Wildcard matches subdomains only, not the base domain itself
+  const wildcardMatch = rules.find(rule => {
+    if (rule.domain.startsWith('*.')) {
+      const baseDomain = rule.domain.slice(2);
+      // Must be a subdomain (have a dot before the base domain)
+      return domain.endsWith(`.${baseDomain}`);
+    }
+    return false;
+  });
+  if (wildcardMatch) {
+    return wildcardMatch.contentSelector;
+  }
+  
+  return null;
 }
 
 export async function getSettings(): Promise<ExtensionSettings> {

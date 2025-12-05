@@ -1,4 +1,4 @@
-import { ExtensionSettings, defaultSettings, getSettings, saveSettings } from '../utils/settings';
+import { ExtensionSettings, SiteRule, defaultSettings, getSettings, saveSettings, parseSiteRules, stringifySiteRules } from '../utils/settings';
 
 // DOM elements
 const excludeNavCheckbox = document.getElementById('excludeNav') as HTMLInputElement;
@@ -10,6 +10,8 @@ const excludeFormsCheckbox = document.getElementById('excludeForms') as HTMLInpu
 const excludeScriptsCheckbox = document.getElementById('excludeScripts') as HTMLInputElement;
 
 const customExclusionsTextarea = document.getElementById('customExclusions') as HTMLTextAreaElement;
+const siteRulesContainer = document.getElementById('siteRulesContainer') as HTMLDivElement;
+const addSiteRuleBtn = document.getElementById('addSiteRule') as HTMLButtonElement;
 
 const includeImagesCheckbox = document.getElementById('includeImages') as HTMLInputElement;
 const includeLinksCheckbox = document.getElementById('includeLinks') as HTMLInputElement;
@@ -32,6 +34,77 @@ function showStatus(message: string, isError = false): void {
   }, 3000);
 }
 
+// Default empty site rule
+const EMPTY_SITE_RULE: SiteRule = { domain: '', contentSelector: '' };
+
+// Create a site rule row element
+function createSiteRuleRow(rule: SiteRule = EMPTY_SITE_RULE): HTMLDivElement {
+  const row = document.createElement('div');
+  row.className = 'site-rule';
+  
+  const domainInput = document.createElement('input');
+  domainInput.type = 'text';
+  domainInput.placeholder = 'example.com';
+  domainInput.value = rule.domain;
+  domainInput.className = 'domain-input';
+  
+  const arrow = document.createElement('span');
+  arrow.className = 'arrow';
+  arrow.textContent = '→';
+  
+  const selectorInput = document.createElement('input');
+  selectorInput.type = 'text';
+  selectorInput.placeholder = '.article-content';
+  selectorInput.value = rule.contentSelector;
+  selectorInput.className = 'selector-input';
+  
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'remove-rule-btn';
+  removeBtn.textContent = '✕';
+  removeBtn.type = 'button';
+  removeBtn.addEventListener('click', () => {
+    row.remove();
+  });
+  
+  row.appendChild(domainInput);
+  row.appendChild(arrow);
+  row.appendChild(selectorInput);
+  row.appendChild(removeBtn);
+  
+  return row;
+}
+
+// Load site rules into UI
+function loadSiteRulesIntoForm(rulesJson: string): void {
+  siteRulesContainer.innerHTML = '';
+  const rules = parseSiteRules(rulesJson);
+  
+  rules.forEach(rule => {
+    const row = createSiteRuleRow(rule);
+    siteRulesContainer.appendChild(row);
+  });
+}
+
+// Get site rules from UI
+function getSiteRulesFromForm(): SiteRule[] {
+  const rules: SiteRule[] = [];
+  const rows = siteRulesContainer.querySelectorAll('.site-rule');
+  
+  rows.forEach(row => {
+    const domainInput = row.querySelector('.domain-input') as HTMLInputElement;
+    const selectorInput = row.querySelector('.selector-input') as HTMLInputElement;
+    
+    const domain = domainInput.value.trim();
+    const contentSelector = selectorInput.value.trim();
+    
+    if (domain && contentSelector) {
+      rules.push({ domain, contentSelector });
+    }
+  });
+  
+  return rules;
+}
+
 // Load settings into form
 function loadSettingsIntoForm(settings: ExtensionSettings): void {
   excludeNavCheckbox.checked = settings.excludeNav;
@@ -43,6 +116,7 @@ function loadSettingsIntoForm(settings: ExtensionSettings): void {
   excludeScriptsCheckbox.checked = settings.excludeScripts;
   
   customExclusionsTextarea.value = settings.customExclusions;
+  loadSiteRulesIntoForm(settings.siteRules);
   
   includeImagesCheckbox.checked = settings.includeImages;
   includeLinksCheckbox.checked = settings.includeLinks;
@@ -53,6 +127,8 @@ function loadSettingsIntoForm(settings: ExtensionSettings): void {
 
 // Get settings from form
 function getSettingsFromForm(): ExtensionSettings {
+  const siteRules = getSiteRulesFromForm();
+  
   return {
     excludeNav: excludeNavCheckbox.checked,
     excludeFooter: excludeFooterCheckbox.checked,
@@ -62,6 +138,7 @@ function getSettingsFromForm(): ExtensionSettings {
     excludeForms: excludeFormsCheckbox.checked,
     excludeScripts: excludeScriptsCheckbox.checked,
     customExclusions: customExclusionsTextarea.value,
+    siteRules: stringifySiteRules(siteRules),
     includeImages: includeImagesCheckbox.checked,
     includeLinks: includeLinksCheckbox.checked,
     preserveTables: preserveTablesCheckbox.checked,
@@ -96,6 +173,15 @@ resetOptionsBtn.addEventListener('click', async () => {
   } catch (error) {
     showStatus('Failed to reset settings', true);
   }
+});
+
+// Add new site rule
+addSiteRuleBtn.addEventListener('click', () => {
+  const row = createSiteRuleRow();
+  siteRulesContainer.appendChild(row);
+  // Focus on the domain input of the new row
+  const domainInput = row.querySelector('.domain-input') as HTMLInputElement;
+  domainInput.focus();
 });
 
 // Load settings on page load

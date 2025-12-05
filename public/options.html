@@ -59,6 +59,26 @@
     </section>
     
     <section class="section">
+      <h2>Site-Specific Rules</h2>
+      <p class="description">Define custom content selectors for specific websites. The extension will use these selectors to find the main content on matching domains:</p>
+      
+      <div id="siteRulesContainer">
+        <!-- Site rules will be dynamically added here -->
+      </div>
+      
+      <button id="addSiteRule" class="add-rule-btn">+ Add Site Rule</button>
+      
+      <div class="rule-help">
+        <p><strong>Examples:</strong></p>
+        <ul>
+          <li><code>example.com</code> → <code>.article-body</code></li>
+          <li><code>blog.example.com</code> → <code>#post-content</code></li>
+          <li><code>*.medium.com</code> → <code>article</code></li>
+        </ul>
+      </div>
+    </section>
+    
+    <section class="section">
       <h2>Output Options</h2>
       
       <div class="checkbox-group">

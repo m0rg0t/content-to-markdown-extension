@@ -51,7 +51,7 @@ chrome.runtime.onMessage.addListener((
           break;
           
         case 'GET_PAGE_MARKDOWN': {
-          const mainContent = getMainContent();
+          const mainContent = await getMainContent();
           const markdown = await convertToMarkdown(mainContent, false);
           const formatted = await formatMarkdownOutput(markdown, true);
           sendResponse({ 
@@ -105,7 +105,7 @@ chrome.runtime.onMessage.addListener((
         
         case 'COPY_PAGE_AS_MARKDOWN': {
           // This is triggered from context menu for entire page
-          const mainContent = getMainContent();
+          const mainContent = await getMainContent();
           const markdown = await convertToMarkdown(mainContent, false);
           const formatted = await formatMarkdownOutput(markdown, true);
           

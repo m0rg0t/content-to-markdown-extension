@@ -1,5 +1,5 @@
 import TurndownService from 'turndown';
-import { ExtensionSettings, getSettings } from '../utils/settings';
+import { ExtensionSettings, getSettings, parseSiteRules, getContentSelectorForDomain } from '../utils/settings';
 
 // Initialize Turndown service
 function createTurndownService(settings: ExtensionSettings): TurndownService {
@@ -168,8 +168,26 @@ export async function convertToMarkdown(html: string | Element, isSelection = fa
 }
 
 // Get the main content of the page
-export function getMainContent(): Element {
-  // Try to find main content area
+export async function getMainContent(): Promise<Element> {
+  const settings = await getSettings();
+  const siteRules = parseSiteRules(settings.siteRules);
+  const currentDomain = window.location.hostname;
+  
+  // Check if there's a site-specific rule for this domain
+  const siteSpecificSelector = getContentSelectorForDomain(siteRules, currentDomain);
+  if (siteSpecificSelector) {
+    try {
+      const element = document.querySelector(siteSpecificSelector);
+      if (element) {
+        return element;
+      }
+      console.warn(`Content to Markdown: Site-specific selector "${siteSpecificSelector}" not found, falling back to default detection.`);
+    } catch (error) {
+      console.warn(`Content to Markdown: Invalid site-specific selector "${siteSpecificSelector}":`, error);
+    }
+  }
+  
+  // Try to find main content area using default selectors
   const mainSelectors = [
     'main',
     '[role="main"]',
