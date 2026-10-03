@@ -126,3 +126,23 @@ Add your own CSS selectors (one per line) for elements you want to exclude, such
 
 ISC
 
+
+
+## Regression checks and compatibility
+
+Use Node >=22.12. Run `npm ci --ignore-scripts`, `npm test`, `npm run typecheck`
+and `npm run build`. Tests use synthetic JSDOM pages and mocked Chrome APIs;
+no real page content or clipboard data is collected. CI tests Node 22/24,
+verifies the built manifest equals the source manifest, and uploads build/log
+artifacts with read-only repository permissions. No extension is installed.
+
+The dependency refresh uses Turndown 7.2.4, Webpack 5.111.1/CLI 7.2.3,
+copy-webpack-plugin 14, ts-loader 9.6.2 and Chrome types 0.3.4. TypeScript is
+held at 6.0.3: testing 7.0.2 with ts-loader 9.6.2 fails all four entries because
+the loader's required compiler `sys.fileExists` API is unavailable.
+
+Runtime message validation, single retry after missing receivers, nested-table
+row isolation, CR/LF normalization and malformed site-rule filtering are covered.
+Manifest V3 service-worker/content-script separation and existing permissions
+remain unchanged. Native Chrome/Edge unpacked-extension smoke testing remains
+manual and requires separate authorization.

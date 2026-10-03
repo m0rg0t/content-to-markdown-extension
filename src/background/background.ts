@@ -19,7 +19,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (!tab?.id) return;
+  if (tab?.id === undefined) return;
   
   try {
     if (info.menuItemId === 'copySelectionAsMarkdown') {
@@ -37,7 +37,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 // Handle messages from content scripts
 chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
-  if (message.type === 'SELECTION_CHANGED') {
+  if (message && typeof message === 'object' && message.type === 'SELECTION_CHANGED') {
     // Could update context menu state here if needed
   }
   return false;

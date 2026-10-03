@@ -100,6 +100,7 @@ export function parseSiteRules(rulesJson: string): SiteRule[] {
     const parsed = JSON.parse(rulesJson);
     if (Array.isArray(parsed)) {
       return parsed.filter(rule => 
+        rule !== null && typeof rule === 'object' &&
         typeof rule.domain === 'string' && 
         typeof rule.contentSelector === 'string'
       );

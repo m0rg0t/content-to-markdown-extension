@@ -36,20 +36,20 @@ function createTurndownService(settings: ExtensionSettings): TurndownService {
       filter: 'table',
       replacement: function(_content, node) {
         const table = node as HTMLTableElement;
-        const rows = Array.from(table.querySelectorAll('tr'));
+        const rows = Array.from(table.querySelectorAll('tr')).filter(row => row.closest('table') === table);
         
         if (rows.length === 0) return '';
         
         let markdown = '\n\n';
         
         rows.forEach((row, rowIndex) => {
-          const cells = Array.from(row.querySelectorAll('th, td'));
+          const cells = Array.from(row.children).filter(cell => cell.matches('th, td'));
           const cellContents = cells.map(cell => {
             // Escape backslashes first, then pipe characters, and normalize newlines
             const text = (cell.textContent || '')
               .replace(/\\/g, '\\\\')
               .replace(/\|/g, '\\|')
-              .replace(/\n/g, ' ')
+              .replace(/[\r\n]+/g, ' ')
               .trim();
             return text;
           });
