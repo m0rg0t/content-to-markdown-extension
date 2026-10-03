@@ -1,4 +1,4 @@
-import { Message, MarkdownResponse } from '../utils/messages';
+import { isMessage, MarkdownResponse } from '../utils/messages';
 import { 
   convertToMarkdown, 
   getMainContent, 
@@ -39,10 +39,14 @@ async function copyToClipboard(text: string): Promise<boolean> {
 
 // Handle messages from popup/background
 chrome.runtime.onMessage.addListener((
-  message: Message,
+  message: unknown,
   _sender,
   sendResponse: (response: MarkdownResponse) => void
 ) => {
+  if (!isMessage(message)) {
+    sendResponse({ success: false, error: 'Invalid message' });
+    return false;
+  }
   (async () => {
     try {
       switch (message.type) {

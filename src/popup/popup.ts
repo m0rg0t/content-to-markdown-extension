@@ -1,3 +1,4 @@
+import { sendToContentScript } from '../utils/sendToContentScript';
 import { Message, MarkdownResponse } from '../utils/messages';
 import { showStatus, getElement } from '../utils/ui';
 
@@ -27,32 +28,6 @@ const elements = {
 // Local reference to status element for helper function
 function displayStatus(message: string, isError = false): void {
   showStatus(elements.statusDiv, message, isError);
-}
-
-// Ensure content script is loaded before sending messages
-async function ensureContentScriptLoaded(tabId: number): Promise<void> {
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId },
-      files: ['content.js']
-    });
-  } catch {
-    // Script already loaded or page doesn't support injection (chrome://, etc.)
-  }
-}
-
-// Send message to content script
-async function sendToContentScript(message: Message): Promise<MarkdownResponse> {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-  if (!tab?.id) {
-    throw new Error('No active tab found');
-  }
-
-  // Ensure content script is injected before sending message
-  await ensureContentScriptLoaded(tab.id);
-
-  return chrome.tabs.sendMessage(tab.id, message);
 }
 
 // Copy text to clipboard with error handling
@@ -110,7 +85,7 @@ async function handleMarkdownAction(
     }
   } catch (error) {
     console.warn(`Action ${messageType} failed:`, error);
-    displayStatus(errorMessage, true);
+    displayStatus(error instanceof Error ? error.message : errorMessage, true);
   } finally {
     button.disabled = false;
   }
